@@ -18,14 +18,12 @@ def get_embedding_model() -> GoogleGenerativeAIEmbeddings:
     return embedding_model
 
 
-def embed_text(text: list[str]) -> list[float]:
-    model = get_embedding_model()
-    embedding = model.embed_query(text)
-    return embedding
-
 def embed_doc(text: list[str]) -> list[float]:
     model = get_embedding_model()
     embedding = model.embed_documents(text)
     return embedding
 
-
+def embed_query(text: list[str]) -> list[float]:
+    model = get_embedding_model()
+    embedding = model.embed_query(text)
+    return embedding
