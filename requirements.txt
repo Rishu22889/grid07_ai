@@ -1,0 +1,13 @@
+langchain
+langchain_community
+langchain_groq
+langgraph
+chromadb
+groq
+python-dotenv
+streamlit
+pydantic
+langchain-huggingface
+sentence-transformers
+langchain_google_genai
+google-generativeai
