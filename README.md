@@ -100,7 +100,7 @@ I constructed a RAG-style prompt using:
 
 ---
 
-### 🛡️ Prompt Injection Defense
+### Prompt Injection Defense
 
 I added a **system-level guardrail** to handle malicious instructions like:
 
@@ -123,7 +123,7 @@ I added a **system-level guardrail** to handle malicious instructions like:
 
 ---
 
-## 📊 Execution Logs
+## Execution Logs
 
 I included logs for:
 
@@ -137,7 +137,7 @@ I included logs for:
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 app/
@@ -162,7 +162,7 @@ pyproject.toml
 
 ---
 
-## ⚠️ Notes
+## NOTE
 
 * ChromaDB files are excluded via `.gitignore`
 * `.env.example` is included 
@@ -170,7 +170,7 @@ pyproject.toml
 
 ---
 
-## 🚀 How to Run
+## How to Run
 
 ```bash
 pip install -r requirements.txt
@@ -182,7 +182,7 @@ python -m app.main
 
 ---
 
-## 💭 Final Thoughts
+## Final Thoughts
 
 This project helped me understand:
 
