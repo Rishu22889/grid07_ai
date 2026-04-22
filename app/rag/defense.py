@@ -116,4 +116,4 @@ def generate_defense_reply(
     bot_reply = response.content.strip().strip('"').strip("'")
     
     print(f"[Defense] Generated reply: {bot_reply}")
-    return bot_reply
+    return bot_reply, is_injection

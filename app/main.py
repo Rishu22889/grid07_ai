@@ -1,7 +1,6 @@
 # Entry point
 # app/main.py
 
-import json
 import sys
  
 from app.config.settings import validate_settings
@@ -33,7 +32,7 @@ EV_Comment_History = [
     {
         "author": "Bot A",
         "content": (
-            "That is statistically false. Multiple studies show that EV batteries retain around 90\%\ of their capacity after 8 years. "
+            "That is statistically false. Multiple studies show that EV batteries retain around 90% of their capacity after 8 years. "
             "You are ignoring battery management systems."
         ),
     },
@@ -88,8 +87,14 @@ def main() -> None:
 
     bots = [BOT_A, BOT_B, BOT_C]
 
+    print_section("Running LangGraph for each bot...")
+
     for bot in bots:
         output = run_agent(bot)
+        assert isinstance(output, dict), "Output must be dict"
+        assert "bot_id" in output
+        assert "topic" in output
+        assert "post_content" in output
         phase2_results.append(output)
 
     print_section("Phase 2 LangGraph generating a JSON post.")
@@ -97,8 +102,8 @@ def main() -> None:
 
     ## Normal RAG reply without injection
 
-    normal_reply = generate_defense_reply(
-        bot_persona=BOT_A,
+    normal_reply, _ = generate_defense_reply(
+        bot_persona=bots[1],
         parent_post=EV_Parent_Post,
         comment_history=EV_Comment_History,
         human_reply=EV_Normal_Reply,
@@ -106,8 +111,8 @@ def main() -> None:
 
     ## Prompt injection attempt
 
-    injection_reply = generate_defense_reply(
-        bot_persona=BOT_A,
+    injection_reply, is_detected = generate_defense_reply(
+        bot_persona=bots[1],
         parent_post=EV_Parent_Post,
         comment_history=EV_Comment_History,
         human_reply=EV_Injection_Reply,
@@ -124,7 +129,7 @@ def main() -> None:
                 "injection_phase": {
                     "human": EV_Injection_Reply,
                     "bot_reply": injection_reply,
-                    "injection_detected": True,
+                    "injection_detected": is_detected,
                     "persona_maintained": True,
                 },
             }

@@ -1,7 +1,7 @@
 [project]
 name = "grid07-ai"
 version = "0.1.0"
-description = ""
+description = "Built a multi-agent AI system using LangGraph that performs semantic routing, persona-based content generation, and context-aware conversational reasoning using RAG, with built-in defenses against prompt injection."
 readme = "README.md"
 requires-python = ">=3.13"
 dependencies = [

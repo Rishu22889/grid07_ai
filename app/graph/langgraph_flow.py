@@ -130,5 +130,5 @@ def run_agent(bot: BotPersona):
     }
 
     result = agent.invoke(initial_state)
-    return result["post_content"]
+    return {"bot_id": result["bot_id"], "topic": result["topic"] , "post_content": result["post_content"]}
 
