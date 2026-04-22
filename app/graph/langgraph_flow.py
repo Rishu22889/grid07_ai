@@ -14,7 +14,6 @@ from pydantic import BaseModel, Field
 from app.config.settings import GROQ_MODEL, GROQ_API_KEY
 from app.personas.bot_personas import BotPersona
 from app.tools.mock_search import mock_searxng_search
-from asyncio import graph
 
 
 class graphState(TypedDict):
@@ -24,7 +23,7 @@ class graphState(TypedDict):
     search_results: list[str]
     post_content: str
 
-def get_llm(temperature: float = 0.72) -> ChatGroq:
+def _get_llm(temperature: float = 0.72) -> ChatGroq:
     return ChatGroq(model=GROQ_MODEL, temperature=temperature, api_key=GROQ_API_KEY)
 
 
@@ -50,10 +49,10 @@ def decide_topic(state: graphState) -> str:
         HumanMessage(content="What topic do you want to post about today?")
     ]
 
-    llm = get_llm()
+    llm = _get_llm()
     response = llm.invoke(message)
     topic = response.content.strip().strip('"').strip("'")
-    return topic
+    return {"topic": topic}
 
 # Note: In a real implementation, this mock tool can be replaced with a real search API like SearxNG or Tavily.
 
@@ -99,13 +98,13 @@ def draft_post(state: graphState):
         HumanMessage(content="Draft a social media post based on the above information.")
     ]
 
-    llm = get_llm()
+    llm = _get_llm()
     response = llm.invoke(message)
     post_content = response.content.strip().strip('"').strip("'")
     return {"post_content": post_content}
 
-def build_graph() -> StateGraph[graphState, Any]:
-    graph = StateGraph[graphState, Any]()
+def build_graph():
+    graph = StateGraph(graphState)
 
     graph.add_node("decide_topic", decide_topic)
     graph.add_node("web_search", web_search)
@@ -124,7 +123,7 @@ def run_agent(bot: BotPersona):
 
     initial_state: graphState = {
         "bot_id": bot.id,
-        "persona": bot.metadata["systemPrompt"],
+        "persona": bot.systemPrompt,
         "topic": "",
         "search_results": [],
         "post_content": ""

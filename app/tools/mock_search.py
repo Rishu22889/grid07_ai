@@ -37,7 +37,7 @@ TAGS_DB = {
     ]
 }
 
-def detect_categories(query: str):
+def _detect_categories(query: str):
     query = query.lower()
     matched = []
 
@@ -51,7 +51,7 @@ def mock_searxng_search(query: str):
     """This function returns mock search results based on simple keyword matching."""
     query = query.lower().replace("'", "")
 
-    category = detect_categories(query)
+    category = _detect_categories(query)
 
     if category == "finance":
         return [

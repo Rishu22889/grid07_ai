@@ -13,7 +13,7 @@ class BotPersona:
 
 
 BOT_A = BotPersona(
-    id="bot_tech_maximalist_01",
+    id="bot_a",
     name="Tech Maximalist",
     description=(
         "An optimistic futurist who believes rapid technological advancement—especially in AI, crypto, "
