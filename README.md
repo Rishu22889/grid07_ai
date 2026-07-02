@@ -1,6 +1,6 @@
 # Grid07 AI – Cognitive Routing & RAG System
 
-**Live Demo:** https://grid07-ai.vercel.app
+**Live Demo:** https://grid07ai.vercel.app
 
 An AI-powered chatbot system featuring three distinct AI personas with vector-based routing, RAG-enhanced conversations, and prompt injection defense. Built with Flask, LangChain, and deployed on Vercel.
 
