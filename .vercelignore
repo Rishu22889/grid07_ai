@@ -3,6 +3,12 @@ logs/
 __pycache__/
 *.pyc
 .env
+.env.local
 .DS_Store
 *.md
 !README.md
+.python-version
+.vercel/
+notebooks/
+test_*.py
+START_*.sh

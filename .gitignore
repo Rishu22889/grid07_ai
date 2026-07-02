@@ -210,3 +210,10 @@ __marimo__/
 .vercel
 .env*
 .env.local
+
+# Project specific
+DEPLOY.md
+*.pyc
+__pycache__/
+chroma_db/
+.python-version
