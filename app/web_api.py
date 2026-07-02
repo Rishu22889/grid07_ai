@@ -175,6 +175,10 @@ def health():
 # For Vercel serverless deployment
 app_vercel = app
 
+# Export for Vercel
+def handler(event, context):
+    return app(event, context)
+
 if __name__ == '__main__':
     print("\n🚀 Starting Grid07 AI Web API...")
     print("📡 API will be available at: http://localhost:5001")
