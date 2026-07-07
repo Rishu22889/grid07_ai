@@ -4,6 +4,22 @@
 
 An AI-powered chatbot system featuring three distinct AI personas with vector-based routing, RAG-enhanced conversations, and prompt injection defense. Built with Flask, LangChain, and deployed on Vercel.
 
+## Screenshots
+
+### Phase 1: Vector Persona Router
+![Phase 1 - Router](./static/phase-1.png)
+Semantic routing using vector similarity to match messages with relevant AI personas.
+
+### Phase 2: Autonomous Content Engine
+![Phase 2 - Content](./static/phase-2.png)
+LangGraph-powered content generation with personality-driven topic selection.
+
+### Phase 3: RAG Combat Defense
+![Phase 3 - Combat](./static/phase-3.png)
+Prompt injection resistance testing with full conversational context.
+
+---
+
 ## Overview
 
 This project demonstrates a production-ready AI system that routes user queries to specialized AI personas, maintains context across multi-turn conversations, and defends against prompt injection attacks. The system combines semantic routing, retrieval-augmented generation, and autonomous content creation.

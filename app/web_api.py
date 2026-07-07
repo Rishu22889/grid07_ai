@@ -17,6 +17,12 @@ try:
 except ImportError:
     RAG_AVAILABLE = False
 
+try:
+    from app.graph.langgraph_flow import run_agent
+    LANGGRAPH_AVAILABLE = True
+except ImportError:
+    LANGGRAPH_AVAILABLE = False
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for web interface
 
@@ -128,7 +134,7 @@ def chat():
 
 @app.route('/api/generate', methods=['POST'])
 def generate_content():
-    """Generate autonomous content for a bot - SIMPLIFIED FOR VERCEL"""
+    """Generate autonomous content for a bot"""
     data = request.json
     bot_id = data.get('bot_id')
     
@@ -138,32 +144,41 @@ def generate_content():
     if bot_id not in BOTS_BY_ID:
         return jsonify({'error': f'Invalid bot_id: {bot_id}'}), 404
     
-    # For Vercel: Simplified generation without LangGraph
     bot = BOTS_BY_ID[bot_id]
     
-    # Predefined topics based on bot personality
-    topics = {
-        'bot_a': ['AI Breakthrough', 'Crypto Adoption', 'Space Technology', 'Future of Work'],
-        'bot_b': ['Tech Monopolies', 'Privacy Crisis', 'Surveillance State', 'Climate Impact'],
-        'bot_c': ['Market Volatility', 'Interest Rates', 'Investment Strategy', 'Economic Trends']
-    }
-    
-    import random
-    topic = random.choice(topics.get(bot_id, ['Technology Update']))
-    
-    # Simple response without LangGraph
-    responses = {
-        'bot_a': f"The future is here! {topic} is accelerating faster than anyone predicted. This is massive.",
-        'bot_b': f"Another day, another problem. {topic} shows exactly what's wrong with unchecked growth.",
-        'bot_c': f"From a market perspective, {topic} presents interesting alpha opportunities. Watch the spreads."
-    }
-    
-    return jsonify({
-        'bot_id': bot_id,
-        'topic': topic,
-        'post_content': responses.get(bot_id, 'Content generated.'),
-        'note': 'Using simplified generation (LangGraph disabled for Vercel)'
-    })
+    if LANGGRAPH_AVAILABLE:
+        try:
+            result = run_agent(bot)
+            return jsonify({
+                'bot_id': result['bot_id'],
+                'topic': result['topic'],
+                'post_content': result['post_content'],
+                'note': 'Generated using LangGraph autonomous pipeline'
+            })
+        except Exception as e:
+            return jsonify({'error': f'LangGraph error: {str(e)}'}), 500
+    else:
+        import random
+        topics = {
+            'bot_a': ['AI Breakthrough', 'Crypto Adoption', 'Space Technology', 'Future of Work'],
+            'bot_b': ['Tech Monopolies', 'Privacy Crisis', 'Surveillance State', 'Climate Impact'],
+            'bot_c': ['Market Volatility', 'Interest Rates', 'Investment Strategy', 'Economic Trends']
+        }
+        
+        topic = random.choice(topics.get(bot_id, ['Technology Update']))
+        
+        responses = {
+            'bot_a': f"The future is here! {topic} is accelerating faster than anyone predicted. This is massive.",
+            'bot_b': f"Another day, another problem. {topic} shows exactly what's wrong with unchecked growth.",
+            'bot_c': f"From a market perspective, {topic} presents interesting alpha opportunities. Watch the spreads."
+        }
+        
+        return jsonify({
+            'bot_id': bot_id,
+            'topic': topic,
+            'post_content': responses.get(bot_id, 'Content generated.'),
+            'note': 'Using simplified generation (LangGraph disabled for Vercel)'
+        })
 
 
 @app.route('/health', methods=['GET'])

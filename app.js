@@ -1,8 +1,12 @@
-const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
+const API_BASE = window.location.protocol === 'file:' || window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' 
     ? 'http://localhost:5001/api' 
     : '/api';
 
 let selectedBot = 'bot_a';
+let comments = [
+    { role: 'human', text: "That's statistically false. Modern EV batteries retain 90% capacity after 8 years." },
+    { role: 'bot', text: "Where are you getting your data from? Corporate propaganda." }
+];
 
 document.addEventListener('DOMContentLoaded', () => {
     initTabs();
@@ -10,6 +14,7 @@ document.addEventListener('DOMContentLoaded', () => {
     initContent();
     initCombat();
     loadPersonas();
+    renderComments();
 });
 
 function initTabs() {
@@ -43,11 +48,11 @@ function initRouter() {
     runBtn.addEventListener('click', async () => {
         const post = input.value.trim();
         if (!post) {
-            results.innerHTML = '<div style="text-align: center; color: var(--text-dim);">Enter a post first</div>';
+            results.innerHTML = '<div style="text-align: center; color: var(--text-dim);">Enter a message first</div>';
             return;
         }
         
-        results.innerHTML = '<div class="loading">Routing...</div>';
+        results.innerHTML = '<div class="loading">Processing...</div>';
         
         try {
             const response = await fetch(`${API_BASE}/route`, {
@@ -62,7 +67,7 @@ function initRouter() {
                 results.innerHTML = data.routed_bots.map(bot => `
                     <div class="result-item">
                         <div class="result-bot">
-                            <span>${getBotIcon(bot.bot_id)}</span>
+                            <div class="result-avatar">${getAgentLetter(bot.bot_id)}</div>
                             <div>
                                 <div class="result-name">${bot.bot_name}</div>
                             </div>
@@ -71,10 +76,10 @@ function initRouter() {
                     </div>
                 `).join('');
             } else {
-                results.innerHTML = '<div style="text-align: center; color: var(--text-dim);">No bots matched</div>';
+                results.innerHTML = '<div style="text-align: center; color: var(--text-dim);">No agents matched</div>';
             }
         } catch (err) {
-            results.innerHTML = `<div style="color: #ff0064;">Error: ${err.message}</div>`;
+            results.innerHTML = `<div style="color: var(--error-color);">Error: ${err.message}</div>`;
         }
     });
 }
@@ -96,7 +101,7 @@ function initContent() {
     generateBtn.addEventListener('click', async () => {
         placeholder.style.display = 'none';
         result.style.display = 'block';
-        result.innerHTML = '<div class="loading">Generating content...</div>';
+        result.innerHTML = '<div class="loading">Generating...</div>';
         
         try {
             const response = await fetch(`${API_BASE}/generate`, {
@@ -108,45 +113,81 @@ function initContent() {
             const data = await response.json();
             
             result.innerHTML = `
-                <div class="content-topic">📌 ${data.topic}</div>
+                <div class="content-topic">${data.topic}</div>
                 <div class="content-text">${data.post_content}</div>
                 ${data.note ? `<div style="margin-top: 1rem; font-size: 0.85rem; color: var(--text-dim);">${data.note}</div>` : ''}
             `;
         } catch (err) {
-            result.innerHTML = `<div style="color: #ff0064;">Error: ${err.message}</div>`;
+            result.innerHTML = `<div style="color: var(--error-color);">Error: ${err.message}</div>`;
         }
     });
 }
 
+function renderComments() {
+    const container = document.getElementById('comment-thread');
+    container.innerHTML = comments.map((comment, index) => `
+        <div class="thread-item">
+            <div class="thread-header">
+                <span class="thread-badge">${comment.role === 'human' ? 'HUMAN' : 'AGENT'}</span>
+                <button class="thread-remove" onclick="removeComment(${index})">×</button>
+            </div>
+            <div class="thread-text" contenteditable="true" onblur="updateComment(${index}, this.textContent)">${comment.text}</div>
+        </div>
+    `).join('');
+}
+
+function removeComment(index) {
+    comments.splice(index, 1);
+    renderComments();
+}
+
+function updateComment(index, newText) {
+    comments[index].text = newText.trim();
+}
+
 function initCombat() {
     const runBtn = document.getElementById('run-combat');
+    const addCommentBtn = document.getElementById('add-comment');
+    const combatBot = document.getElementById('combat-bot');
     const parentPost = document.getElementById('parent-post');
     const reply = document.getElementById('combat-reply');
     const result = document.getElementById('combat-result');
+    const displayPlaceholder = document.querySelector('.display-placeholder');
+    
+    addCommentBtn.addEventListener('click', () => {
+        const role = prompt('Enter role (human or agent):');
+        const text = prompt('Enter comment text:');
+        if (role && text) {
+            comments.push({ role: role.toLowerCase(), text });
+            renderComments();
+        }
+    });
     
     runBtn.addEventListener('click', async () => {
         const parent = parentPost.value.trim();
         const userReply = reply.value.trim();
+        const botId = combatBot.value;
         
         if (!userReply) {
-            alert('Enter your reply');
+            alert('Enter your test input');
             return;
         }
         
+        displayPlaceholder.style.display = 'none';
         result.classList.add('visible');
-        result.innerHTML = '<div class="loading">Bot is responding...</div>';
+        result.innerHTML = '<div class="loading">Processing...</div>';
         
-        const history = [
-            { role: 'bot', message: "That's statistically false. EV batteries retain 90% capacity after 8 years." },
-            { role: 'human', message: "Where are you getting your data from? Corporate propaganda." }
-        ];
+        const history = comments.map(c => ({
+            role: c.role,
+            message: c.text
+        }));
         
         try {
             const response = await fetch(`${API_BASE}/chat`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    bot_id: 'bot_a',
+                    bot_id: botId,
                     message: userReply,
                     parent_post: parent || 'Electric Vehicles are a complete scam.',
                     comment_history: history
@@ -155,22 +196,27 @@ function initCombat() {
             
             const data = await response.json();
             
-            const injectionBadge = data.injection_detected 
-                ? '<span class="injection-badge detected">🚨 Injection Detected</span>'
-                : '<span class="injection-badge safe">✅ Clean Input</span>';
+            const statusIndicator = data.injection_detected 
+                ? '<div class="status-indicator detected">INJECTION DETECTED</div>'
+                : '<div class="status-indicator safe">CLEAN INPUT</div>';
             
             result.innerHTML = `
-                <div class="combat-header">
-                    <span>${getBotIcon(data.bot_id)}</span>
-                    <div>
-                        <div style="font-weight: 600;">${data.bot_name}</div>
-                        ${injectionBadge}
+                <div class="defense-response">
+                    <div class="response-header">
+                        <div class="response-bot">
+                            <div class="response-bot-avatar">${getAgentLetter(data.bot_id)}</div>
+                            <div class="response-bot-name">${data.bot_name}</div>
+                        </div>
+                    </div>
+                    <div class="response-text">${data.reply}</div>
+                    <div class="defense-status">
+                        ${statusIndicator}
+                        <span style="color: var(--text-dim); font-size: 0.85rem;">Defense system active</span>
                     </div>
                 </div>
-                <div class="bot-reply">${data.reply}</div>
             `;
         } catch (err) {
-            result.innerHTML = `<div style="color: #ff0064;">Error: ${err.message}</div>`;
+            result.innerHTML = `<div style="color: var(--error-color);">Error: ${err.message}</div>`;
         }
     });
 }
@@ -185,7 +231,7 @@ async function loadPersonas() {
         container.innerHTML = data.bots.map(bot => `
             <div class="persona-card">
                 <div class="persona-header">
-                    <span>${getBotIcon(bot.id)}</span>
+                    <div class="persona-avatar">${getAgentLetter(bot.id)}</div>
                     <div class="persona-title">${bot.name}</div>
                 </div>
                 <div class="persona-desc">${bot.description}</div>
@@ -196,11 +242,11 @@ async function loadPersonas() {
     }
 }
 
-function getBotIcon(botId) {
-    const icons = {
-        'bot_a': '🚀',
-        'bot_b': '💀',
-        'bot_c': '💰'
+function getAgentLetter(botId) {
+    const letters = {
+        'bot_a': 'A',
+        'bot_b': 'B',
+        'bot_c': 'C'
     };
-    return icons[botId] || '🤖';
+    return letters[botId] || '?';
 }
