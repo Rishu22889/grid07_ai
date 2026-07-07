@@ -148,6 +148,12 @@ function updateComment(index, newText) {
 function initCombat() {
     const runBtn = document.getElementById('run-combat');
     const addCommentBtn = document.getElementById('add-comment');
+    const modal = document.getElementById('comment-modal');
+    const modalClose = document.getElementById('modal-close');
+    const modalCancel = document.getElementById('modal-cancel');
+    const modalSubmit = document.getElementById('modal-submit');
+    const commentRole = document.getElementById('comment-role');
+    const commentText = document.getElementById('comment-text');
     const combatBot = document.getElementById('combat-bot');
     const parentPost = document.getElementById('parent-post');
     const reply = document.getElementById('combat-reply');
@@ -155,12 +161,37 @@ function initCombat() {
     const displayPlaceholder = document.querySelector('.display-placeholder');
     
     addCommentBtn.addEventListener('click', () => {
-        const role = prompt('Enter role (human or agent):');
-        const text = prompt('Enter comment text:');
-        if (role && text) {
-            comments.push({ role: role.toLowerCase(), text });
-            renderComments();
+        modal.classList.add('active');
+        commentText.value = '';
+        commentRole.value = 'human';
+    });
+    
+    modalClose.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+    
+    modalCancel.addEventListener('click', () => {
+        modal.classList.remove('active');
+    });
+    
+    modal.addEventListener('click', (e) => {
+        if (e.target === modal) {
+            modal.classList.remove('active');
         }
+    });
+    
+    modalSubmit.addEventListener('click', () => {
+        const role = commentRole.value;
+        const text = commentText.value.trim();
+        
+        if (!text) {
+            alert('Please enter comment text');
+            return;
+        }
+        
+        comments.push({ role, text });
+        renderComments();
+        modal.classList.remove('active');
     });
     
     runBtn.addEventListener('click', async () => {
