@@ -58,7 +58,7 @@ function initRouter() {
             const response = await fetch(`${API_BASE}/route`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ post, threshold: parseFloat(thresholdValue.textContent) })
+                body: JSON.stringify({ post, threshold: Number.parseFloat(thresholdValue.textContent) })
             });
             
             const data = await response.json();

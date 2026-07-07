@@ -72,12 +72,12 @@
 
             <div class="demo-grid">
                 <div class="input-panel">
-                    <label>INPUT MESSAGE</label>
+                    <label for="router-input">INPUT MESSAGE</label>
                     <textarea id="router-input" placeholder="Enter your social media post or message here..."></textarea>
                     
                     <div class="controls">
                         <div class="threshold-control">
-                            <label>THRESHOLD</label>
+                            <label for="threshold">THRESHOLD</label>
                             <input type="range" id="threshold" min="0" max="100" value="25">
                             <span id="threshold-value">0.25</span>
                         </div>
@@ -146,27 +146,27 @@
             <div class="combat-grid">
                 <div class="combat-control">
                     <div class="control-section">
-                        <label>SELECT AGENT</label>
+                        <label for="combat-bot">SELECT AGENT</label>
                         <select id="combat-bot" class="combat-select">
-                            <option value="bot_a">Tech Maximalist — Tech Optimist</option>
-                            <option value="bot_b">Doomer — Critical Skeptic</option>
-                            <option value="bot_c">Finance Bro — Market Analyst</option>
+                            <option value="bot_a">Agent Alpha — Tech Optimist</option>
+                            <option value="bot_b">Agent Beta — Critical Skeptic</option>
+                            <option value="bot_c">Agent Gamma — Market Analyst</option>
                         </select>
                     </div>
 
                     <div class="control-section">
-                        <label>PARENT POST</label>
+                        <label for="parent-post">PARENT POST</label>
                         <textarea id="parent-post" rows="3" placeholder="Enter the original post that started the conversation..."></textarea>
                     </div>
 
                     <div class="control-section">
-                        <label>COMMENT THREAD</label>
-                        <div class="comment-thread" id="comment-thread"></div>
+                        <label for="comment-thread">COMMENT THREAD</label>
+                        <div class="comment-thread" id="comment-thread" role="list" aria-label="Comment thread"></div>
                         <button class="add-comment-btn" id="add-comment">Add Comment</button>
                     </div>
 
                     <div class="control-section">
-                        <label>TEST INPUT <span class="injection-label">INJECTION TEST</span></label>
+                        <label for="combat-reply">TEST INPUT <span class="injection-label">INJECTION TEST</span></label>
                         <textarea id="combat-reply" rows="3" placeholder="Enter your message or injection attempt..."></textarea>
                     </div>
 
@@ -195,14 +195,14 @@
             </div>
             <div class="modal-body">
                 <div class="form-group">
-                    <label>ROLE</label>
+                    <label for="comment-role">ROLE</label>
                     <select id="comment-role" class="modal-select">
                         <option value="human">Human</option>
                         <option value="agent">Agent</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label>COMMENT TEXT</label>
+                    <label for="comment-text">COMMENT TEXT</label>
                     <textarea id="comment-text" rows="4" placeholder="Enter comment text..."></textarea>
                 </div>
             </div>
