@@ -12,3 +12,6 @@ __pycache__/
 notebooks/
 test_*.py
 START_*.sh
+pyproject.toml
+ruff.toml
+.github/
