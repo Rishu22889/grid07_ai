@@ -7,7 +7,11 @@ export default function Navbar({ activePhase, setActivePhase }: NavbarProps) {
   return (
     <nav className="navbar">
       <div className="nav-brand">
-        <div className="brand-icon"></div>
+        <img
+            src="/favicon.png"
+            alt="Grid07-AI"
+            className="brand-icon"
+        />
         <span>GRID07</span>
       </div>
       

@@ -64,7 +64,7 @@ body::before {
 .brand-icon {
     width: 32px;
     height: 32px;
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    object-fit: contain;
     border-radius: 6px;
 }
 
