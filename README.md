@@ -103,25 +103,40 @@ This ensures conversations feel natural and coherent while maintaining security.
 
 ## Technical Stack
 
-**Backend**
-- Python 3.13 for core logic
-- Flask for the REST API
-- Flask-CORS for cross-origin requests
-- LangChain for LLM orchestration
-- LangGraph for state machine workflows
-- Groq API for language model inference
-- Google Gemini for embedding generation
+### Backend
+- **Python 3.13**: Core language
+- **Flask**: REST API framework
+- **Flask-CORS**: Cross-origin requests
+- **LangChain**: LLM orchestration
+- **LangGraph**: State machine workflows
+- **Groq API**: Fast LLM inference (Llama 3.3 70B)
+- **Google Gemini**: Embedding generation
+- **ChromaDB**: Vector database (local only)
 
-**Frontend**
-- Pure HTML, CSS, and JavaScript
-- Cyberpunk-inspired dark theme
-- Responsive design for mobile and desktop
-- Real-time chat interface
+### Frontend
+- **React 19**: UI framework
+- **TypeScript 6**: Type safety
+- **Vite 8**: Build tool and dev server
+- **CSS3**: Custom styling (professional dark theme)
+- **Responsive Design**: Mobile and desktop support
 
-**Infrastructure**
-- Vercel for serverless deployment
-- Environment-based configuration
-- Automatic HTTPS and CDN
+### Infrastructure & DevOps
+- **Docker & Docker Compose**: Containerization and orchestration
+- **Nginx**: Reverse proxy for production
+- **Vercel**: Serverless deployment with automatic HTTPS
+- **GitHub Actions**: CI/CD pipelines
+- **GitHub Container Registry**: Docker image hosting
+
+### Development Tools
+- **Ruff**: Python linting
+- **Black**: Python code formatting
+- **oxlint**: TypeScript/JavaScript linting
+- **Trivy**: Security vulnerability scanning
+
+### Evaluation & Testing
+- **Groq API (Llama 3.3 70B)**: LLM-as-Judge evaluation
+- **Custom Test Suite**: 30 curated test cases
+- **Automated CI/CD Testing**: Weekly evaluation runs
 
 ---
 
