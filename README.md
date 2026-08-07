@@ -1,8 +1,8 @@
 # Grid07 AI – Cognitive Routing & RAG System
 
-![CI](https://github.com/Rishu22889/grid07_ai/workflows/CI%2FCD%20Pipeline/badge.svg)
-![Docker Publish](https://github.com/Rishu22889/grid07_ai/workflows/Docker%20Publish/badge.svg)
-![Vercel Deploy](https://github.com/Rishu22889/grid07_ai/workflows/Vercel%20Deploy/badge.svg)
+[![CI/CD Pipeline](https://github.com/Rishu22889/grid07_ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/ci.yml)
+[![Docker Publish](https://github.com/Rishu22889/grid07_ai/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/docker-publish.yml)
+[![Vercel Deploy](https://github.com/Rishu22889/grid07_ai/actions/workflows/vercel-deploy.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/vercel-deploy.yml)
 
 **Live Demo:** https://grid07ai.vercel.app
 
