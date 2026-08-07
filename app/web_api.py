@@ -1,7 +1,8 @@
+import os
+import secrets
 import sys
 from pathlib import Path
 
-# Add parent directory to path
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from flask import Flask, request, jsonify
@@ -10,7 +11,6 @@ from flask_cors import CORS
 from app.config.settings import validate_settings
 from app.personas.bot_personas import ALL_BOTS, BOTS_BY_ID
 
-# Import only chat functionality (works without heavy deps)
 try:
     from app.rag.defense import generate_defense_reply
     RAG_AVAILABLE = True
@@ -24,9 +24,12 @@ except ImportError:
     LANGGRAPH_AVAILABLE = False
 
 app = Flask(__name__)
-CORS(app)  # Enable CORS for web interface
 
-# Validate settings on startup
+ALLOWED_ORIGINS = os.getenv('ALLOWED_ORIGINS', '*').split(',')
+CORS(app, origins=ALLOWED_ORIGINS)
+
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', secrets.token_hex(32))
+
 try:
     validate_settings()
     print("✅ Settings validated successfully")
@@ -51,15 +54,19 @@ def get_bots():
 
 @app.route('/api/route', methods=['POST'])
 def route_post():
-    """Route a post to relevant bot personas - DISABLED FOR VERCEL"""
-    data = request.json
-    post_content = data.get('post', '')
+    """Route a post to relevant bot personas"""
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Invalid JSON'}), 400
+    
+    post_content = data.get('post', '').strip()
     
     if not post_content:
         return jsonify({'error': 'Post content is required'}), 400
     
-    # For Vercel: Return simplified routing (no ChromaDB)
-    # Simple keyword-based routing as fallback
+    if len(post_content) > 5000:
+        return jsonify({'error': 'Post content too long (max 5000 characters)'}), 400
+    
     post_lower = post_content.lower()
     routed = []
     
@@ -73,7 +80,6 @@ def route_post():
         routed.append({'bot_id': 'bot_c', 'bot_name': 'Finance Bro', 'similarity_score': 0.88})
     
     if not routed:
-        # Default to all bots with lower scores
         routed = [
             {'bot_id': 'bot_a', 'bot_name': 'Tech Maximalist', 'similarity_score': 0.55},
             {'bot_id': 'bot_b', 'bot_name': 'Doomer', 'similarity_score': 0.52},
@@ -91,10 +97,13 @@ def route_post():
 @app.route('/api/chat', methods=['POST'])
 def chat():
     """Chat with a specific bot persona"""
-    data = request.json
-    bot_id = data.get('bot_id')
-    message = data.get('message', '')
-    parent_post = data.get('parent_post', '')
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Invalid JSON'}), 400
+    
+    bot_id = data.get('bot_id', '').strip()
+    message = data.get('message', '').strip()
+    parent_post = data.get('parent_post', '').strip()
     comment_history = data.get('comment_history', [])
     
     if not bot_id:
@@ -103,13 +112,15 @@ def chat():
     if not message:
         return jsonify({'error': 'message is required'}), 400
     
+    if len(message) > 5000:
+        return jsonify({'error': 'Message too long (max 5000 characters)'}), 400
+    
     if bot_id not in BOTS_BY_ID:
         return jsonify({'error': f'Invalid bot_id: {bot_id}'}), 404
     
     try:
         bot = BOTS_BY_ID[bot_id]
         
-        # Try using RAG if available, otherwise use simple response
         if RAG_AVAILABLE:
             bot_reply, injection_detected = generate_defense_reply(
                 bot_persona=bot,
@@ -118,7 +129,6 @@ def chat():
                 human_reply=message
             )
         else:
-            # Fallback: simple response without RAG
             bot_reply = f"[{bot.name}] I received your message about: {message[:50]}..."
             injection_detected = False
         
@@ -129,14 +139,18 @@ def chat():
             'injection_detected': injection_detected
         })
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        app.logger.error(f"Chat error: {str(e)}")
+        return jsonify({'error': 'Internal server error'}), 500
 
 
 @app.route('/api/generate', methods=['POST'])
 def generate_content():
     """Generate autonomous content for a bot"""
-    data = request.json
-    bot_id = data.get('bot_id')
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({'error': 'Invalid JSON'}), 400
+    
+    bot_id = data.get('bot_id', '').strip()
     
     if not bot_id:
         return jsonify({'error': 'bot_id is required'}), 400
@@ -156,7 +170,8 @@ def generate_content():
                 'note': 'Generated using LangGraph autonomous pipeline'
             })
         except Exception as e:
-            return jsonify({'error': f'LangGraph error: {str(e)}'}), 500
+            app.logger.error(f"LangGraph error: {str(e)}")
+            return jsonify({'error': 'Content generation failed'}), 500
     else:
         import random
         topics = {
@@ -187,12 +202,23 @@ def health():
     return jsonify({'status': 'healthy', 'service': 'Grid07 AI API'})
 
 
-# For Vercel serverless deployment
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({'error': 'Endpoint not found'}), 404
+
+
+@app.errorhandler(500)
+def internal_error(error):
+    app.logger.error(f"Internal error: {str(error)}")
+    return jsonify({'error': 'Internal server error'}), 500
+
+
 app_vercel = app
 
-# Export for Vercel
+
 def handler(event, context):
     return app(event, context)
+
 
 if __name__ == '__main__':
     print("\n🚀 Starting Grid07 AI Web API...")
@@ -205,4 +231,9 @@ if __name__ == '__main__':
     print("   - GET  /health        - Health check")
     print("\n")
     
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    is_production = os.getenv('FLASK_ENV') == 'production'
+    app.run(
+        host='127.0.0.1' if not is_production else '0.0.0.0',
+        port=5001,
+        debug=not is_production
+    )
