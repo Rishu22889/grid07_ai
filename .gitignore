@@ -87,3 +87,6 @@ coverage/
 chroma_db/
 notebooks/
 DEPLOY.md
+
+# Docker
+.dockerignore

@@ -1,5 +1,9 @@
 # Grid07 AI – Cognitive Routing & RAG System
 
+![CI](https://github.com/Rishu22889/grid07_ai/workflows/CI%2FCD%20Pipeline/badge.svg)
+![Docker Publish](https://github.com/Rishu22889/grid07_ai/workflows/Docker%20Publish/badge.svg)
+![Vercel Deploy](https://github.com/Rishu22889/grid07_ai/workflows/Vercel%20Deploy/badge.svg)
+
 **Live Demo:** https://grid07ai.vercel.app
 
 An AI-powered chatbot system featuring three distinct AI personas with vector-based routing, RAG-enhanced conversations, and prompt injection defense. Built with Flask, LangChain, and deployed on Vercel.
@@ -120,6 +124,29 @@ This ensures conversations feel natural and coherent while maintaining security.
 
 ## Deployment
 
+### Quick Start with Docker
+
+The easiest way to run the entire stack:
+
+```bash
+# Clone the repository
+git clone https://github.com/Rishu22889/grid07_ai.git
+cd grid07_ai
+
+# Create .env file
+cp .env.example .env
+# Edit .env with your API keys
+
+# Run with Docker Compose
+docker-compose up --build
+```
+
+Access the application:
+- **Frontend**: http://localhost
+- **Backend API**: http://localhost:5001
+
+See [DOCKER.md](./DOCKER.md) for detailed Docker documentation.
+
 ### Deploy to Vercel
 
 1. Clone the repository:
@@ -177,12 +204,43 @@ Start the API server:
 python -m app.web_api
 ```
 
-Open the chatbot:
+Start the frontend (development mode):
 ```bash
-open index.html
+cd frontend
+npm install
+npm run dev
 ```
 
-The application will be available at http://localhost:5001
+The application will be available at:
+- Frontend: http://localhost:5173
+- Backend: http://localhost:5001
+
+### Code Quality
+
+Run linters before committing:
+
+```bash
+# Backend linting
+pip install ruff black
+ruff check app/
+black --check app/
+
+# Frontend linting
+cd frontend
+npm run lint
+```
+
+---
+
+## CI/CD Pipeline
+
+The project includes automated GitHub Actions workflows:
+
+- **Continuous Integration**: Linting, building, and security scanning on every push
+- **Docker Publishing**: Automated Docker image builds and publishing to GitHub Container Registry
+- **Vercel Deployment**: Automatic deployments to Vercel on main branch updates
+
+See [.github/workflows/README.md](./.github/workflows/README.md) for detailed CI/CD documentation.
 
 ---
 
