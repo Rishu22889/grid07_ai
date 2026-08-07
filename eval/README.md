@@ -2,6 +2,12 @@
 
 An automated evaluation system that uses LLM-as-Judge methodology to assess Grid07 AI's RAG pipeline performance across multiple dimensions: relevance, faithfulness, safety, and prompt injection resistance.
 
+## Dashboard Preview
+
+![Evaluation Dashboard](../static/eval-dashboard.png)
+
+*Interactive dashboard showing evaluation metrics, scores by category, and detailed test results.*
+
 ## Overview
 
 This evaluation harness demonstrates production-ready AI system evaluation practices, addressing the "evaluation methods" requirement in the Trilogy Innovations JD.

@@ -251,6 +251,12 @@ See [.github/workflows/README.md](./.github/workflows/README.md) for detailed CI
 
 Grid07 AI includes a comprehensive evaluation harness that demonstrates production-ready AI system evaluation practices.
 
+### Dashboard Preview
+
+![Evaluation Dashboard](./static/eval-dashboard.png)
+
+*Interactive evaluation dashboard with real-time metrics and test results*
+
 ### Evaluation System
 
 - **30 Curated Test Cases**: Covering technology discussions, critical analysis, financial topics, prompt injections, multi-turn conversations, and safety boundaries
