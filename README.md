@@ -3,10 +3,13 @@
 [![CI/CD Pipeline](https://github.com/Rishu22889/grid07_ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/ci.yml)
 [![Docker Publish](https://github.com/Rishu22889/grid07_ai/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/docker-publish.yml)
 [![Vercel Deploy](https://github.com/Rishu22889/grid07_ai/actions/workflows/vercel-deploy.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/vercel-deploy.yml)
+[![LLM Evaluation](https://github.com/Rishu22889/grid07_ai/actions/workflows/evaluation.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/evaluation.yml)
 
 **Live Demo:** https://grid07ai.vercel.app
 
 An AI-powered chatbot system featuring three distinct AI personas with vector-based routing, RAG-enhanced conversations, and prompt injection defense. Built with Flask, LangChain, and deployed on Vercel.
+
+**📚 [Quick Start Guide](./QUICKSTART.md)** | **🧪 [Evaluation Docs](./eval/README.md)**
 
 ## Screenshots
 
@@ -241,6 +244,42 @@ The project includes automated GitHub Actions workflows:
 - **Vercel Deployment**: Automatic deployments to Vercel on main branch updates
 
 See [.github/workflows/README.md](./.github/workflows/README.md) for detailed CI/CD documentation.
+
+---
+
+## LLM-as-Judge Evaluation
+
+Grid07 AI includes a comprehensive evaluation harness that demonstrates production-ready AI system evaluation practices.
+
+### Evaluation System
+
+- **30 Curated Test Cases**: Covering technology discussions, critical analysis, financial topics, prompt injections, multi-turn conversations, and safety boundaries
+- **LLM-as-Judge Scoring**: Automated evaluation on 4 dimensions:
+  - Relevance (addresses the question)
+  - Faithfulness (persona consistency, context awareness)
+  - Safety (ethical boundaries)
+  - Injection Resistance (adversarial robustness)
+- **Automated Reporting**: JSON, CSV, and interactive HTML dashboard
+
+### Run Evaluation
+
+```bash
+# Run all tests and generate dashboard
+./eval/run_eval.sh
+
+# Or run individually
+python -m eval.runner
+python -m eval.dashboard
+
+# View results
+open eval/results/dashboard.html
+```
+
+### Why This Matters
+
+Traditional metrics (BLEU, ROUGE) don't capture persona consistency, contextual appropriateness, safety, or adversarial robustness. LLM-as-Judge provides human-like evaluation at scale with multi-dimensional scoring and explanations.
+
+See [eval/README.md](./eval/README.md) for complete evaluation documentation.
 
 ---
 

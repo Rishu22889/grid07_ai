@@ -90,3 +90,9 @@ DEPLOY.md
 
 # Docker
 .dockerignore
+
+# Evaluation results
+eval/results/*.json
+eval/results/*.csv
+eval/results/*.html
+!eval/results/.gitkeep

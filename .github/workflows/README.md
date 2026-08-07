@@ -17,7 +17,7 @@ This directory contains GitHub Actions workflows for continuous integration and 
 
 **Status Badge**:
 ```markdown
-![CI](https://github.com/Rishu22889/grid07_ai/workflows/CI%2FCD%20Pipeline/badge.svg)
+[![CI](https://github.com/Rishu22889/grid07_ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/ci.yml)
 ```
 
 ### 2. Docker Publish (`docker-publish.yml`)
@@ -45,11 +45,10 @@ docker pull ghcr.io/rishu22889/grid07_ai-frontend:latest
 
 ### 3. Vercel Deploy (`vercel-deploy.yml`)
 
-**Triggers**: Push and PR to `main` branch
+**Triggers**: Manual workflow dispatch only
 
 **Jobs**:
-- Deploy to Vercel on push to main
-- Preview deployments on PRs
+- Deploy to Vercel on manual trigger
 
 **Setup Required**:
 Add `VERCEL_TOKEN` to repository secrets:
@@ -59,6 +58,30 @@ Add `VERCEL_TOKEN` to repository secrets:
    - Name: `VERCEL_TOKEN`
    - Value: Your token
 
+### 4. LLM Evaluation (`evaluation.yml`)
+
+**Triggers**: 
+- Weekly schedule (Sunday at midnight)
+- Manual workflow dispatch
+- Pull requests (optional)
+
+**Jobs**:
+- Run full LLM-as-Judge evaluation suite
+- Generate dashboard and reports
+- Upload results as artifacts
+- Comment on PRs with evaluation summary
+- Quality gate check (fail if score < 3.0)
+
+**Setup Required**:
+Add these secrets to repository:
+- `GROQ_API_KEY`: For LLM judge
+- `GOOGLE_API_KEY`: For embeddings (if using RAG)
+
+**Artifacts**:
+- `latest.json` - Full evaluation results
+- `latest.csv` - Spreadsheet format
+- `dashboard.html` - Interactive visualization
+
 ## Setup Instructions
 
 ### Required Secrets
@@ -66,6 +89,8 @@ Add `VERCEL_TOKEN` to repository secrets:
 Add these secrets to your GitHub repository (Settings → Secrets → Actions):
 
 1. **VERCEL_TOKEN**: Vercel deployment token (optional, only for automated Vercel deploys)
+2. **GROQ_API_KEY**: For LLM evaluation (optional, only for automated eval)
+3. **GOOGLE_API_KEY**: For embeddings in evaluation (optional)
 
 ### Required Permissions
 
@@ -73,6 +98,7 @@ Ensure GitHub Actions has the following permissions:
 - **Contents**: Read
 - **Packages**: Write (for Docker registry)
 - **Security events**: Write (for Trivy results)
+- **Pull requests**: Write (for eval comments)
 
 Configure in: Settings → Actions → General → Workflow permissions
 
@@ -109,18 +135,27 @@ docker build -f Dockerfile.backend -t grid07-backend:test .
 docker build -f Dockerfile.frontend -t grid07-frontend:test .
 ```
 
+### Test evaluation locally:
+```bash
+python -m eval.runner
+python -m eval.dashboard
+open eval/results/dashboard.html
+```
+
 ## Workflow Files
 
 - `ci.yml` - Main CI pipeline
 - `docker-publish.yml` - Docker image publishing
 - `vercel-deploy.yml` - Vercel deployment
+- `evaluation.yml` - LLM-as-Judge evaluation
 
 ## Status Badges
 
 Add these to your README.md:
 
 ```markdown
-![CI](https://github.com/Rishu22889/grid07_ai/workflows/CI%2FCD%20Pipeline/badge.svg)
-![Docker Publish](https://github.com/Rishu22889/grid07_ai/workflows/Docker%20Publish/badge.svg)
-![Vercel Deploy](https://github.com/Rishu22889/grid07_ai/workflows/Vercel%20Deploy/badge.svg)
+[![CI](https://github.com/Rishu22889/grid07_ai/actions/workflows/ci.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/ci.yml)
+[![Docker Publish](https://github.com/Rishu22889/grid07_ai/actions/workflows/docker-publish.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/docker-publish.yml)
+[![Vercel Deploy](https://github.com/Rishu22889/grid07_ai/actions/workflows/vercel-deploy.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/vercel-deploy.yml)
+[![LLM Evaluation](https://github.com/Rishu22889/grid07_ai/actions/workflows/evaluation.yml/badge.svg)](https://github.com/Rishu22889/grid07_ai/actions/workflows/evaluation.yml)
 ```
