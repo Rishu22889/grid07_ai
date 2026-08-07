@@ -1,36 +1,43 @@
 name: Vercel Deploy (Optional)
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
   workflow_dispatch:
 
 jobs:
   deploy:
     name: Deploy to Vercel
     runs-on: ubuntu-latest
-    if: github.event_name == 'workflow_dispatch' || (github.event_name == 'push' && github.ref == 'refs/heads/main')
     steps:
       - uses: actions/checkout@v4
 
+      - name: Check for Vercel Token
+        id: check-token
+        run: |
+          if [ -z "${{ secrets.VERCEL_TOKEN }}" ]; then
+            echo "skip=true" >> $GITHUB_OUTPUT
+            echo "⚠️ VERCEL_TOKEN not set, skipping deployment"
+          else
+            echo "skip=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Setup Node.js
+        if: steps.check-token.outputs.skip != 'true'
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
       - name: Install Vercel CLI
+        if: steps.check-token.outputs.skip != 'true'
         run: npm install -g vercel@latest
 
       - name: Pull Vercel Environment
+        if: steps.check-token.outputs.skip != 'true'
         run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-        if: secrets.VERCEL_TOKEN != ''
 
       - name: Build Project
+        if: steps.check-token.outputs.skip != 'true'
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-        if: secrets.VERCEL_TOKEN != ''
 
       - name: Deploy to Vercel
+        if: steps.check-token.outputs.skip != 'true'
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-        if: secrets.VERCEL_TOKEN != ''
