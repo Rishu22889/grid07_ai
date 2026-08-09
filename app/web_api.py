@@ -79,10 +79,13 @@ def route_post():
     print(f"🎚️  Threshold: {threshold}")
     print(f"🔧 Using: Semantic Embeddings (Google Gemini + ChromaDB)")
 
+    routed_bots = []
+    routing_method = "unknown"
+    routing_model = "unknown"
+    
     try:
-        # Use semantic routing with embeddings
+        # Try semantic routing with ChromaDB (works locally with persistent storage)
         routed = route_post_to_bots(post_content, threshold=threshold)
-
         routed_bots = [
             {
                 "bot_id": bot_id,
@@ -91,53 +94,101 @@ def route_post():
             }
             for bot_id, bot_name, score in routed
         ]
-
-        # Log final results
-        print(f"\n📊 FINAL RESULTS:")
+        routing_method = "semantic_embeddings_chromadb"
+        routing_model = "Google Gemini embeddings + ChromaDB vector store"
+        
+        print(f"\n📊 CHROMADB ROUTING RESULTS:")
         for bot in routed_bots:
             print(f"   ✓ {bot['bot_name']:20} Score: {bot['similarity_score']:.4f}")
 
-        # Add real-time context if available
-        context = None
-        try:
-            from app.tools.real_search import search_web
-            print(f"\n🔍 Enriching with Tavily search...")
-            search_results = search_web(post_content, max_results=2)
-            context = [
-                {'title': r.get('title', ''), 'snippet': r.get('content', '')[:150]}
-                for r in search_results
-            ]
-            print(f"✓ Added {len(context)} context items")
-        except Exception as e:
-            print(f"⚠️  Tavily search skipped: {e}")
-
-        print(f"\n✅ Successfully routed to {len(routed_bots)} bot(s)")
-        print(f"{'='*70}\n")
-
-        return jsonify({
-            "post": post_content,
-            "routed_bots": routed_bots,
-            "count": len(routed_bots),
-            "threshold": threshold,
-            "context": context,
-            "method": "semantic_embeddings",
-            "model": "Google Gemini embeddings + ChromaDB cosine similarity",
-            "note": "Real semantic search" + (" + Tavily context" if context else "")
-        })
-
     except Exception as e:
-        print(f"\n❌ ROUTING FAILED!")
-        print(f"Error type: {type(e).__name__}")
-        print(f"Error message: {str(e)}")
-        import traceback
-        traceback.print_exc()
+        print(f"\n⚠️  ChromaDB routing failed: {e}")
+        print(f"🔄 Trying serverless semantic routing (on-demand embeddings)...")
         
-        app.logger.error(f"Routing error: {str(e)}")
-        return jsonify({
-            "error": "Routing failed",
-            "details": str(e),
-            "type": type(e).__name__
-        }), 500
+        # Try serverless semantic routing (no vector DB, compute on each request)
+        try:
+            from app.router.serverless_routing import serverless_semantic_routing
+            routed = serverless_semantic_routing(post_content, threshold=threshold)
+            routed_bots = [
+                {
+                    "bot_id": bot_id,
+                    "bot_name": bot_name,
+                    "similarity_score": round(score, 4)
+                }
+                for bot_id, bot_name, score in routed
+            ]
+            routing_method = "semantic_embeddings_serverless"
+            routing_model = "Google Gemini embeddings (computed on-demand, no vector DB)"
+            
+            print(f"\n📊 SERVERLESS SEMANTIC ROUTING RESULTS:")
+            for bot in routed_bots:
+                print(f"   ✓ {bot['bot_name']:20} Score: {bot['similarity_score']:.4f}")
+                
+        except Exception as serverless_error:
+            print(f"\n⚠️  Serverless semantic routing failed: {serverless_error}")
+            print(f"🔄 Falling back to keyword-based routing...")
+            
+            # Final fallback: keyword-based routing (no API calls, pure logic)
+            try:
+                from app.router.keyword_routing import keyword_based_routing
+                routed = keyword_based_routing(post_content, threshold=threshold)
+                routed_bots = [
+                    {
+                        "bot_id": bot_id,
+                        "bot_name": bot_name,
+                        "similarity_score": round(score, 4)
+                    }
+                    for bot_id, bot_name, score in routed
+                ]
+                routing_method = "keyword_matching"
+                routing_model = "Weighted keyword dictionary (fallback)"
+                
+                print(f"\n📊 KEYWORD ROUTING RESULTS:")
+                for bot in routed_bots:
+                    print(f"   ✓ {bot['bot_name']:20} Score: {bot['similarity_score']:.4f}")
+                    
+            except Exception as keyword_error:
+                print(f"\n❌ All routing methods failed!")
+                import traceback
+                traceback.print_exc()
+                
+                return jsonify({
+                    "error": "Routing system unavailable",
+                    "details": {
+                        "chromadb": str(e),
+                        "serverless": str(serverless_error),
+                        "keyword": str(keyword_error)
+                    },
+                    "type": "RoutingFailure"
+                }), 500
+
+    # Add real-time context if available
+    context = None
+    try:
+        from app.tools.real_search import search_web
+        print(f"\n🔍 Enriching with Tavily search...")
+        search_results = search_web(post_content, max_results=2)
+        context = [
+            {'title': r.get('title', ''), 'snippet': r.get('content', '')[:150]}
+            for r in search_results
+        ]
+        print(f"✓ Added {len(context)} context items")
+    except Exception as e:
+        print(f"⚠️  Tavily search skipped: {e}")
+
+    print(f"\n✅ Successfully routed to {len(routed_bots)} bot(s)")
+    print(f"{'='*70}\n")
+
+    return jsonify({
+        "post": post_content,
+        "routed_bots": routed_bots,
+        "count": len(routed_bots),
+        "threshold": threshold,
+        "context": context,
+        "method": routing_method,
+        "model": routing_model,
+        "note": f"Using {routing_method}" + (" + Tavily context" if context else "")
+    })
 
 
 
