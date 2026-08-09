@@ -199,6 +199,7 @@ vercel --prod
 Both services offer free tiers suitable for development and demonstration:
 - Groq API: https://console.groq.com/keys
 - Google AI Studio: https://aistudio.google.com/app/apikey
+- Tavily Search (Optional): https://tavily.com/ - For real web search in content generation
 
 ---
 
@@ -216,6 +217,44 @@ Configure environment variables:
 cp .env.example .env
 # Edit .env with your API keys
 ```
+
+---
+
+## Testing the Routing System
+
+The routing system uses **real semantic embeddings** (Google Gemini + ChromaDB), not hardcoded scores.
+
+### Automated Test Script
+
+Run the test script to verify routing accuracy:
+
+```bash
+python test_routing.py
+```
+
+**Expected Results:**
+- Finance queries (Bitcoin, ROI, leverage) → Finance Bro scores highest
+- Critical queries (privacy, surveillance, monopolies) → Doomer scores highest  
+- Tech queries (AI, quantum computing, SpaceX) → Tech Maximalist scores highest
+- Each query produces **unique scores** based on semantic similarity
+
+### Debug API Endpoint
+
+Verify embeddings are real (not hardcoded):
+
+```bash
+curl -X POST http://localhost:5001/api/debug/embeddings \
+  -H "Content-Type: application/json" \
+  -d '{"text": "Bitcoin price analysis and market trends"}'
+```
+
+**Response includes:**
+- Actual embedding vectors (first 10 dimensions shown)
+- Similarity scores for each bot persona
+- Vector dimensionality (768 dimensions for Gemini)
+- Proof that vectors change with different inputs
+
+---
 
 Start the API server:
 ```bash

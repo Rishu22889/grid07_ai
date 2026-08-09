@@ -18,7 +18,7 @@ CHROMA_NAME: str = "bot_personas"
 GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 EMBEDDING_MODEL = os.getenv('EMBEDDING_MODEL', 'models/gemini-embedding-001')
 
-ROUTING_THRESHOLD: float = float(os.getenv('ROUTING_THRESHOLD', '0.5'))
+ROUTING_THRESHOLD: float = float(os.getenv('ROUTING_THRESHOLD', '0.6'))
 
 
 # Validation 

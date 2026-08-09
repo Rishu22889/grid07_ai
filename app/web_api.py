@@ -8,7 +8,9 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 
-from app.config.settings import validate_settings
+from app.router.routing import route_post_to_bots
+
+from app.config.settings import validate_settings, ROUTING_THRESHOLD
 from app.personas.bot_personas import ALL_BOTS, BOTS_BY_ID
 
 try:
@@ -52,46 +54,91 @@ def get_bots():
     return jsonify({'bots': bots_info})
 
 
-@app.route('/api/route', methods=['POST'])
+@app.route("/api/route", methods=["POST"])
 def route_post():
-    """Route a post to relevant bot personas"""
+    """Route a post to relevant bot personas using semantic similarity."""
+
     data = request.get_json(silent=True)
+
     if not data:
-        return jsonify({'error': 'Invalid JSON'}), 400
-    
-    post_content = data.get('post', '').strip()
-    
+        return jsonify({"error": "Invalid JSON"}), 400
+
+    post_content = data.get("post", "").strip()
+    threshold = float(data.get("threshold", ROUTING_THRESHOLD))
+
     if not post_content:
-        return jsonify({'error': 'Post content is required'}), 400
-    
+        return jsonify({"error": "Post content is required"}), 400
+
     if len(post_content) > 5000:
-        return jsonify({'error': 'Post content too long (max 5000 characters)'}), 400
-    
-    post_lower = post_content.lower()
-    routed = []
-    
-    if any(word in post_lower for word in ['ai', 'tech', 'innovation', 'crypto', 'space', 'future']):
-        routed.append({'bot_id': 'bot_a', 'bot_name': 'Tech Maximalist', 'similarity_score': 0.85})
-    
-    if any(word in post_lower for word in ['problem', 'monopoly', 'privacy', 'surveillance', 'capitalism']):
-        routed.append({'bot_id': 'bot_b', 'bot_name': 'Doomer', 'similarity_score': 0.82})
-    
-    if any(word in post_lower for word in ['market', 'stock', 'price', 'money', 'trade', 'invest', 'bitcoin']):
-        routed.append({'bot_id': 'bot_c', 'bot_name': 'Finance Bro', 'similarity_score': 0.88})
-    
-    if not routed:
-        routed = [
-            {'bot_id': 'bot_a', 'bot_name': 'Tech Maximalist', 'similarity_score': 0.55},
-            {'bot_id': 'bot_b', 'bot_name': 'Doomer', 'similarity_score': 0.52},
-            {'bot_id': 'bot_c', 'bot_name': 'Finance Bro', 'similarity_score': 0.50}
+        return jsonify({"error": "Post content too long (max 5000 characters)"}), 400
+
+    print(f"\n{'='*70}")
+    print(f"🎯 ROUTING REQUEST (Timestamp: {__import__('time').time()})")
+    print(f"{'='*70}")
+    print(f"📝 Post: {post_content[:100]}...")
+    print(f"🎚️  Threshold: {threshold}")
+    print(f"🔧 Using: Semantic Embeddings (Google Gemini + ChromaDB)")
+
+    try:
+        # Use semantic routing with embeddings
+        routed = route_post_to_bots(post_content, threshold=threshold)
+
+        routed_bots = [
+            {
+                "bot_id": bot_id,
+                "bot_name": bot_name,
+                "similarity_score": round(score, 4)
+            }
+            for bot_id, bot_name, score in routed
         ]
-    
-    return jsonify({
-        'post': post_content,
-        'routed_bots': routed,
-        'count': len(routed),
-        'note': 'Using keyword-based routing (ChromaDB disabled for Vercel deployment)'
-    })
+
+        # Log final results
+        print(f"\n📊 FINAL RESULTS:")
+        for bot in routed_bots:
+            print(f"   ✓ {bot['bot_name']:20} Score: {bot['similarity_score']:.4f}")
+
+        # Add real-time context if available
+        context = None
+        try:
+            from app.tools.real_search import search_web
+            print(f"\n🔍 Enriching with Tavily search...")
+            search_results = search_web(post_content, max_results=2)
+            context = [
+                {'title': r.get('title', ''), 'snippet': r.get('content', '')[:150]}
+                for r in search_results
+            ]
+            print(f"✓ Added {len(context)} context items")
+        except Exception as e:
+            print(f"⚠️  Tavily search skipped: {e}")
+
+        print(f"\n✅ Successfully routed to {len(routed_bots)} bot(s)")
+        print(f"{'='*70}\n")
+
+        return jsonify({
+            "post": post_content,
+            "routed_bots": routed_bots,
+            "count": len(routed_bots),
+            "threshold": threshold,
+            "context": context,
+            "method": "semantic_embeddings",
+            "model": "Google Gemini embeddings + ChromaDB cosine similarity",
+            "note": "Real semantic search" + (" + Tavily context" if context else "")
+        })
+
+    except Exception as e:
+        print(f"\n❌ ROUTING FAILED!")
+        print(f"Error type: {type(e).__name__}")
+        print(f"Error message: {str(e)}")
+        import traceback
+        traceback.print_exc()
+        
+        app.logger.error(f"Routing error: {str(e)}")
+        return jsonify({
+            "error": "Routing failed",
+            "details": str(e),
+            "type": type(e).__name__
+        }), 500
+
 
 
 @app.route('/api/chat', methods=['POST'])
@@ -105,6 +152,9 @@ def chat():
     message = data.get('message', '').strip()
     parent_post = data.get('parent_post', '').strip()
     comment_history = data.get('comment_history', [])
+
+    if not parent_post:
+        parent_post = ""
     
     if not bot_id:
         return jsonify({'error': 'bot_id is required'}), 400
@@ -194,6 +244,62 @@ def generate_content():
             'post_content': responses.get(bot_id, 'Content generated.'),
             'note': 'Using simplified generation (LangGraph disabled for Vercel)'
         })
+
+
+@app.route('/api/debug/embeddings', methods=['POST'])
+def debug_embeddings():
+    """Debug endpoint to show actual embedding vectors and prove they're not hardcoded"""
+    data = request.get_json(silent=True)
+    if not data:
+        return jsonify({"error": "Invalid JSON"}), 400
+    
+    text = data.get("text", "").strip()
+    if not text:
+        return jsonify({"error": "Text is required"}), 400
+    
+    try:
+        from app.embeddings.embedding_model import get_embedding_model
+        from app.router.routing import get_store
+        from app.vectorstore.chroma_store import query_similar_bots
+        
+        embedding_model = get_embedding_model()
+        
+        # Generate embedding for the input text
+        input_embedding = embedding_model.embed_query(text)
+        
+        # Get the vector store
+        store = get_store()
+        
+        # Query for similar bots
+        results = query_similar_bots(store, text, top_k=3)
+        
+        # Get embeddings for each bot description
+        from app.personas.bot_personas import BOTS_BY_ID
+        bot_embeddings = {}
+        for bot_id, bot_name, score in results:
+            bot = BOTS_BY_ID[bot_id]
+            bot_embedding = embedding_model.embed_query(bot.description)
+            bot_embeddings[bot_id] = {
+                "name": bot_name,
+                "score": score,
+                "embedding_preview": bot_embedding[:10],  # First 10 dimensions
+                "embedding_length": len(bot_embedding)
+            }
+        
+        return jsonify({
+            "input_text": text,
+            "input_embedding_preview": input_embedding[:10],  # First 10 dimensions
+            "embedding_length": len(input_embedding),
+            "embedding_model": "Google Gemini (models/embedding-001)",
+            "bot_results": bot_embeddings,
+            "note": "These are REAL embeddings, not hardcoded. Each query generates unique vectors."
+        })
+    
+    except Exception as e:
+        return jsonify({
+            "error": "Debug failed",
+            "details": str(e)
+        }), 500
 
 
 @app.route('/health', methods=['GET'])

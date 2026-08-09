@@ -54,14 +54,20 @@ def query_similar_bots(
     ) -> List[Tuple[BotPersona, float]]:
 
     """Query the vector store for bots similar to the given post."""
+    
+    print(f"\n🔍 Querying ChromaDB vector store...")
+    print(f"   Query: '{post[:80]}...'")
+    print(f"   Top K: {top_k}")
 
     results = vectorStore.similarity_search_with_relevance_scores(post, k=top_k)
 
     hits: List[Tuple[str, str, float]] = []
 
+    print(f"\n📊 Raw similarity scores from embeddings:")
     for doc, score in results:
         bot_id = doc.metadata.get("bot_id")
         bot_name = doc.metadata.get("bot_name")
+        print(f"   {bot_name:20} | Score: {score:.4f}")
         hits.append((bot_id, bot_name, round(score,4)))
 
     return sorted(hits, key=lambda x: x[2], reverse=True)
