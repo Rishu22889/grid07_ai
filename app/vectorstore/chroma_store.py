@@ -1,14 +1,22 @@
-# ChromaDB setup
+# ChromaDB setup - optional for serverless environments
 # app/vectorstore/chroma_store.py
 
 from __future__ import annotations
 from functools import lru_cache
-from typing import List, Tuple
+from typing import List, Tuple, Optional
 import os
 
-import chromadb
-from chromadb.config import Settings
-from langchain_chroma import Chroma
+try:
+    import chromadb
+    from chromadb.config import Settings
+    from langchain_chroma import Chroma
+    CHROMADB_AVAILABLE = True
+except ImportError:
+    CHROMADB_AVAILABLE = False
+    chromadb = None
+    Settings = None
+    Chroma = None
+
 from langchain_core.documents import Document
 
 from app.config.settings import CHROMA_DIR, CHROMA_NAME
@@ -16,23 +24,18 @@ from app.embeddings.embedding_model import get_embedding_model
 from app.personas.bot_personas import ALL_BOTS, BotPersona
 
 @lru_cache(maxsize=1)
-def _get_client() -> chromadb.ClientAPI:
+def _get_client():
     """
     Get ChromaDB client - hosted or local based on environment.
-    
-    For hosted ChromaDB (Vercel/production):
-    - Set CHROMA_HOST (e.g., 'api.trychroma.com' or 'your-instance.trychroma.com')
-    - Set CHROMA_API_KEY (your API token)
-    
-    For local ChromaDB (development):
-    - Don't set CHROMA_HOST
-    - Uses persistent local storage in ./chroma_db/
+    Returns None if ChromaDB is not available.
     """
+    if not CHROMADB_AVAILABLE:
+        raise ImportError("ChromaDB is not installed")
+    
     chroma_host = os.getenv('CHROMA_HOST')
     chroma_api_key = os.getenv('CHROMA_API_KEY')
     
     if chroma_host:
-        # Use hosted ChromaDB for serverless environments
         print(f"[ChromaDB] Connecting to hosted instance: {chroma_host}")
         
         headers = {}
@@ -40,13 +43,12 @@ def _get_client() -> chromadb.ClientAPI:
             headers["Authorization"] = f"Bearer {chroma_api_key}"
             print(f"[ChromaDB] Using API key authentication")
         
-        # Parse host and port if specified
         if ':' in chroma_host:
             host, port = chroma_host.rsplit(':', 1)
             port = int(port)
         else:
             host = chroma_host
-            port = 443  # Default HTTPS port
+            port = 443
         
         return chromadb.HttpClient(
             host=host,
@@ -59,7 +61,6 @@ def _get_client() -> chromadb.ClientAPI:
             )
         )
     else:
-        # Use local persistent ChromaDB for development
         print(f"[ChromaDB] Using local persistent storage: {CHROMA_DIR}")
         return chromadb.PersistentClient(
             path=CHROMA_DIR,
@@ -67,8 +68,11 @@ def _get_client() -> chromadb.ClientAPI:
         )
 
 
-def build_store(bots: List[BotPersona] = ALL_BOTS) -> Chroma:
+def build_store(bots: List[BotPersona] = ALL_BOTS):
     """Build a Chroma vector store for the given bots."""
+    if not CHROMADB_AVAILABLE:
+        raise ImportError("ChromaDB is not installed")
+    
     embedding_model = get_embedding_model()
     client = _get_client()
 
@@ -95,12 +99,7 @@ def build_store(bots: List[BotPersona] = ALL_BOTS) -> Chroma:
     print(f"[ChromaDB] Built vector store with {len(bots)} bot personas.")
     return vectorStore
 
-def query_similar_bots(
-        vectorStore: Chroma,
-        post: str,
-        top_k: int = 3,
-    ) -> List[Tuple[str, str, float]]:
-
+def query_similar_bots(vectorStore, post: str, top_k: int = 3) -> List[Tuple[str, str, float]]:
     """Query the vector store for bots similar to the given post."""
     
     print(f"\n🔍 Querying ChromaDB vector store...")
